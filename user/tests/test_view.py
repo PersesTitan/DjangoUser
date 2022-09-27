@@ -29,5 +29,4 @@ class ViewTest(TestCase):
         request = client.get("/find/")
         print(request.headers)
         print(request.content)
-
         self.assertEqual(request.status_code, 200)
