@@ -30,5 +30,5 @@ urlpatterns = [
     path('login/', Login.as_view(), name='login'),
     path('users/<int:uid>/', Edit.as_view(), name='edit'),
 
-    path('find/', FindMember.as_view()),
+    path('members/', FindMember.as_view()),
 ]
