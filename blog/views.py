@@ -31,17 +31,8 @@ class Create(View):
 class Find(View):
     # +) 검색 로직
     def get(self, request):
-        keyword = request.GET.get('keyword', None)
-        # 검색어가 존재하지 않을때 모두 불러오기
-        blogs = \
-            Blog.objects.filter(vis=True).filter(title__icontains=keyword) \
-            if keyword else \
-            Blog.objects.filter(vis=True).all()
-        data = dict()
-        # +) key: id, value: title
-        for blog in blogs:
-            data[blog.id] = make_board(blog)
-        return JsonResponse(data, status=200)
+        li = list(map(dict, Blog.objects.values()))
+        return JsonResponse({"blog": li}, status=200)
 
 
 # 1개 찾기 OR 특정 게시판 편집
