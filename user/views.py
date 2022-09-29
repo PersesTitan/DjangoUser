@@ -1,5 +1,6 @@
 import json
 import re
+import uuid
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q
@@ -13,20 +14,34 @@ from user import models
 from user.models import Member
 
 
+ID_REPOSITORY = dict()
+
+
 # Create your views here.
+# /login/
 @method_decorator(csrf_exempt, name='dispatch')
 class Login(View):
     def post(self, request):
+        # templates
+        # data = request.POST
+        # JSON
         data = json.loads(request.body)
+
         user_id = data['id']
         password = data['password']
         user = Member.objects.filter(Q(login_id=user_id) & Q(password=password))
         if len(user) == 0:
             raise ValidationError('비밀번호 또는 아이디가 틀렸습니다.')
-        # else:
-        #     response = HttpResponse("로그인 완료")
-        #     response.set_cookie('token', user[0].id)
-        return redirect('blogs')
+        else:
+            # id를 노출 시키지 않기 위해서 uuid 전송
+            UUID = uuid.uuid4()
+            member = get_object_or_404(Member, login_id=user_id)
+            # ID_REPOSITORY 해당 UUID, id를 값을 넣어줌
+            ID_REPOSITORY[str(UUID)] = member.id
+            print(ID_REPOSITORY)
+            response = redirect('blogs')
+            response.set_cookie('id', UUID)
+        return response
 
     def get(self, request):
         return render(request, 'login.html')
