@@ -124,6 +124,10 @@ class Edit(View):
         member.delete()
         return JsonResponse({"message": "삭제 완료"}, status=201)
 
+    def get(self, request, uid):
+        member = get_object_or_404(Member, pk=uid)
+        return JsonResponse({"id": member.id}, status=200)
+
 
 class FindMember(View):
     def get(self, request):
