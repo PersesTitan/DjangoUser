@@ -1,6 +1,12 @@
 import json
 import random
+import uuid
+from http.cookies import SimpleCookie
 from unittest import TestCase
+
+import simplejson as simplejson
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from blog.models import Blog
 from color_print import p
@@ -8,11 +14,15 @@ from user.models import Member
 from django.test import Client
 
 from user.tests.test_models import count
+from user.views import ID_REPOSITORY, uniq_check
 
 client = Client()
 
 
 class ViewTest(TestCase):
+    # 테스트 유저 이름
+    userName = "Tester0"
+
     # @classmethod
     # def setUpTestData(cls):
     #     count = 100
@@ -28,10 +38,6 @@ class ViewTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # 데이터 삭제 로직
-        Member.objects.all().delete()
-        Blog.objects.all().delete()
-
         rand = lambda: random.randint(0, 9)
         count = 10
         for author_id in range(count):
@@ -63,7 +69,7 @@ class ViewTest(TestCase):
         print()
         message = "Member List"
         count.log(p.auto_hr(message))
-        print("\n".join(str(request.content)[16:-4].split("}, {")))
+        # print("\n".join(str(request.content)[16:-4].split("}, {")))
         self.assertEqual(request.status_code, 200)
 
     # 데이터 불러오는 로직
@@ -72,7 +78,7 @@ class ViewTest(TestCase):
         print()
         message = "Blog List"
         count.log(p.auto_hr(message))
-        print("\n".join(str(request.content)[13:-4].split("}, {")))
+        # print("\n".join(str(request.content)[13:-4].split("}, {")))
         self.assertEqual(request.status_code, 200)
 
     # 게시판
@@ -85,6 +91,40 @@ class ViewTest(TestCase):
             self.assertEqual(request.status_code, 200)
         self.assertEqual(request.status_code, 200)
 
+    # 로그인 로직
+    def Test_login_member(self):
+        message = self.userName + " Login"
+        print()
+        count.log(p.auto_hr(message))
+
+        # value = {"id": userName, "password": "1234"}
+        # request = client.post("/login/", json.dumps(value), "application/json")
+
+        member = get_object_or_404(Member, login_id=self.userName)
+        # 수동 쿠기 저장
+        UUID = str(uuid.uuid4())
+        uniq_check(UUID, member.id)
+        client.cookies['id'] = UUID
+        response = client.get('/login/', follow=True)
+        self.assertEqual(response.status_code, 200)
+
+    # 게시판 생성
+    def Test_create_board(self):
+        UUID = client.cookies.get('id').value
+        value = {"title": "title copy", "content": "content copy", "member": ID_REPOSITORY[UUID]}
+        request = client.post("/blog-create/", json.dumps(value), "application/json")
+        self.assertEqual(request.status_code, 201)
+
+    def test_board(self):
+        test_member = get_object_or_404(Member, login_id=self.userName)
+        test_id = test_member.id
+
+        self.Test_login_member()  # 로그인 로직
+        # 쿠기 저장 확인 로직
+        self.assertEqual(test_id, ID_REPOSITORY[client.cookies.get('id').value])
+        self.Test_create_board()  # 게시판 생성 로직
+        # 게시판 겟수 확인
+        self.assertEqual(2, len(Blog.objects.filter(member=test_member)))
 
     # 데이터 삭제 로직
     @classmethod
