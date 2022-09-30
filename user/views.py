@@ -13,8 +13,20 @@ from django.views.decorators.csrf import csrf_exempt
 from user import models
 from user.models import Member
 
-
 ID_REPOSITORY = dict()
+
+
+def get_key(value):
+    for k, v in ID_REPOSITORY.items():
+        if v == value:
+            return k
+
+
+def uniq_check(key, value):
+    if len(ID_REPOSITORY) != 0 and value in list(ID_REPOSITORY.values()):
+        # 존재하는 값 일때 삭제
+        del ID_REPOSITORY[get_key(value)]
+    ID_REPOSITORY[key] = value
 
 
 # Create your views here.
@@ -37,10 +49,11 @@ class Login(View):
             UUID = uuid.uuid4()
             member = get_object_or_404(Member, login_id=user_id)
             # ID_REPOSITORY 해당 UUID, id를 값을 넣어줌
-            ID_REPOSITORY[str(UUID)] = member.id
-            print(ID_REPOSITORY)
+            # 이미 존재하는 ID 일때 값 갱신
+            uniq_check(str(UUID), member.id)
             response = redirect('blogs')
             response.set_cookie('id', UUID)
+        # 블로그로 연결
         return response
 
     def get(self, request):
