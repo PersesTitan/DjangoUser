@@ -16,6 +16,7 @@ def get_member(request):
     user_id = ID_REPOSITORY.get(request.COOKIES.get('id'))
     if user_id is None:
         return redirect("login")
+    # Member 값 리턴
     return get_object_or_404(Member, pk=user_id)
 
 
@@ -32,7 +33,7 @@ class Create(View):
         # user.views 에 존재하는 ID_REPOSITORY 불러옴
         member = get_member(request)
         if type(member) != Member:
-            return redirect("login")
+            return member
 
         data = json.loads(request.body)
         title = data["title"]
@@ -64,23 +65,31 @@ class FindOne(View):
     def patch(self, request, blog_id):
         # user.views 에 존재하는 ID_REPOSITORY 불러옴
         member = get_member(request)
-
+        if type(member) != Member:
+            return member
+        blog = Blog.objects.get(pk=blog_id)
         # Blog 가져오기
-        data = json.loads(request.body)
-        title = data["title"]
-        content = data["content"]
-        b = Blog.objects.get(pk=blog_id)
-        if b.member == member:
-            b.title = title
-            b.content = content
-            b.save()
+        if blog.member == member:
+            data = dict(json.loads(request.body))
+            title = data.get("title")
+            content = data.get("content")
+            # 정보 업데이트
+            if title is not None:
+                blog.title = title
+            if content is not None:
+                blog.content = content
+            blog.save()
             return JsonResponse({"title": title, "content": content}, status=200)
         else:
             return JsonResponse({"error": "수정할 수 없는 계정 입니다."}, status=403)
 
     # 보이지 않게 처리
     def delete(self, request, blog_id):
-        b = Blog.objects.get(pk=blog_id)
-        b.vis = False
-        b.save()
-        return JsonResponse({}, status=200)
+        member = get_member(request)
+        if type(member) != Member:
+            return member
+        blog = Blog.objects.get(pk=blog_id)
+        if blog.member == member:
+            blog.vis = False
+            blog.save()
+        return JsonResponse({"message": "삭제가 완료되었습니다."}, status=200)
