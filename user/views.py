@@ -101,7 +101,7 @@ class SingUp(View):
             email=email,
             password=password,
             phone_number=phone,
-            address=int(address)
+            address=address
         )
         member.save()
         return JsonResponse({"member": member.id}, status=201)
