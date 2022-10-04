@@ -38,12 +38,17 @@ class Create(View):
         data = json.loads(request.body)
         title = data["title"]
         content = data["content"]
-        Blog(
+        blog = Blog.objects.create(
             title=title,
             content=content,
             member=member
-        ).save()
-        return JsonResponse({"title": title, "content": content}, status=201)
+        )
+        # blog = Blog(
+        #     title=title,
+        #     content=content,
+        #     member=member
+        # ).save()
+        return JsonResponse({"id": blog.id, "title": title, "content": content, "member": blog.member.id}, status=201)
 
 
 class Find(View):
@@ -79,7 +84,7 @@ class FindOne(View):
             if content is not None:
                 blog.content = content
             blog.save()
-            return JsonResponse({"title": title, "content": content}, status=200)
+            return JsonResponse({"title": blog.title, "content": blog.content}, status=200)
         else:
             return JsonResponse({"error": "수정할 수 없는 계정 입니다."}, status=403)
 
