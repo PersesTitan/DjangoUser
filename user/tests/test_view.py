@@ -136,12 +136,8 @@ class ViewTest(TestCase):
         print()
         count.log(p.auto_hr(message))
 
-        p.red("수정전 값")
-
         value = {"title": "title Test Change", "content": None}
         requests = client.patch(f"/blogs/{board_id}/", json.dumps(value), "application/json")
-        p.red("수정된 값")
-        print(json.loads(requests.content))
         self.assertEqual(requests.status_code, 302)  # 302 : 로그인을 위해서 로그인 페이지로 연결
 
     # 게시판 수정 ( title 변경 )
@@ -150,12 +146,18 @@ class ViewTest(TestCase):
         print()
         count.log(p.auto_hr(message))
 
+        before_requests = client.get(f"/blogs/{board_id}/")
+        p.red("수정전 값")
+        print(json.loads(before_requests.content))
+
         UUID = client.cookies.get("id").value
         change_title = "title Test Change"
         value = {"title": change_title, "content": None, "id": UUID}
         requests = client.patch(f"/blogs/{board_id}/", json.dumps(value), "application/json")
 
         request_value = json.loads(requests.content)
+        p.red("수정된 값")
+        print(request_value)
         self.assertEqual(request_value["title"], change_title)  # 값이 변경 되었는지 확인
         self.assertIsNotNone(request_value["content"])  # 값이 None 인지 확인
         self.assertEqual(request_value["content"], "content copy")  # 값이 그대로인지 확인
