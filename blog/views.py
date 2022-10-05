@@ -64,7 +64,8 @@ class Find(View):
 class FindOne(View):
     def get(self, request, blog_id):
         blog = get_object_or_404(Blog, pk=blog_id)
-        return JsonResponse({blog.id: make_board(blog)}, status=200)
+        # li = dict(blog.objects.values())
+        return JsonResponse(make_board(blog), status=200)
 
     # 편집
     def patch(self, request, blog_id):
@@ -84,7 +85,7 @@ class FindOne(View):
             if content is not None:
                 blog.content = content
             blog.save()
-            return JsonResponse({"title": blog.title, "content": blog.content}, status=200)
+            return JsonResponse(make_board(blog), status=200)
         else:
             return JsonResponse({"error": "수정할 수 없는 계정 입니다."}, status=403)
 
